@@ -1,0 +1,84 @@
+
+- name: Installer et configurer l'environnement de développement
+  hosts: homelab
+  become: true # 'become' est nécessaire pour installer les paquets système
+  vars:
+    user: root
+    user_home: "/home/{{ user }}"
+  vars_files: ./vars/homelab_secrets.yml
+  
+
+  tasks:
+    - name: 1. Installer les paquets de base requis
+      ansible.builtin.package:
+        name:
+          - zsh
+          - tmux
+          - ripgrep
+          - fzf
+          - nnn
+          - git
+          - curl
+          - unzip
+          - neovim
+          - zoxide
+          - git
+        state: present
+
+    - name: 1b. Gérer le paquet 'bat' (nom différent sur Debian)
+      when: ansible_os_family == "Debian"
+      block:
+        - name: Installer batcat sur Debian/Ubuntu
+          ansible.builtin.apt:
+            name: bat
+            state: present
+          # Note: sur les versions récentes de Debian, le paquet est 'bat' et le binaire est 'batcat'
+          # sur les plus anciennes, le paquet est 'batcat'. Ansible gère ça.
+
+        - name: Créer un lien symbolique bat -> batcat
+          ansible.builtin.file:
+            src: /usr/bin/batcat
+            dest: /usr/local/bin/bat
+            state: link
+
+    - name: 1c. Installer bat sur RedHat/Fedora
+      ansible.builtin.package:
+        name: bat
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: 2. Changer le shell par défaut en Zsh pour l'utilisateur {{ user }}
+      ansible.builtin.user:
+        name: "{{ user }}"
+        shell: /bin/zsh
+
+    - name: 3. Vérifier si Oh My Zsh est déjà installé
+      become: true
+      become_user: "{{ user }}"
+      ansible.builtin.stat:
+        path: "{{ user_home }}/.oh-my-zsh"
+      register: oh_my_zsh_stat
+
+    - name: 3b. Installer Oh My Zsh
+      ansible.builtin.shell: 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
+      args:
+        creates: "{{ user_home }}/.oh-my-zsh"
+      become_user: "{{ user }}"
+      become: true
+      when: not oh_my_zsh_stat.stat.exists
+
+    # - name: 5. Installer zoxide
+    #   block:
+    #     - name: Télécharger le script d'installation de zoxide
+    #       ansible.builtin.get_url:
+    #         url: https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh
+    #         dest: /tmp/install-zoxide.sh
+    #         mode: '0755'
+    #       register: zoxide_installer
+
+    #     - name: Exécuter le script d'installation de zoxide
+    #       become: true
+    #       become_user: "{{ user }}"
+    #       ansible.builtin.command: /tmp/install-zoxide.sh
+    #       args:
+    #         creates: "{{ user_home }}/.local/bin/zoxide"

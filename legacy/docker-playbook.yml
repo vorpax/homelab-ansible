@@ -1,0 +1,102 @@
+
+- name: Installer Docker et Tailscale sur le VPS
+  hosts: vps
+  become: true # 'become' est nécessaire pour toutes ces opérations
+  vars_files:
+    - vars/secrets.yml # Charger notre clé Tailscale
+  vars:
+    # --- CHANGEZ CES VALEURS SELON VOS BESOINS ---
+    new_hostname: "racknerd-vps-1" # Le nom que vous voulez donner à votre serveur
+    dev_user: vorpax_admin # L'utilisateur que nous avons créé
+    # ---------------------------------------------
+
+  tasks:
+#    - name: 1. Changer le hostname du serveur
+#      hostname:
+#        name: "{{ new_hostname }}"
+#      notify: Redémarrer le serveur pour appliquer le hostname
+
+    # --- Installation de Docker ---
+    - name: 2. Installer les paquets prérequis pour Docker
+      package:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: 2b. Ajouter la clé GPG officielle de Docker (Debian/Ubuntu)
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: 2c. Ajouter le dépôt Docker (Debian/Ubuntu)
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: 2d. Installer Docker Engine
+      package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+      
+    - name: 2e. Ajouter l'utilisateur '{{ dev_user }}' au groupe docker
+      user:
+        name: "{{ dev_user }}"
+        groups: docker
+        append: yes
+
+    # --- Installation de Tailscale ---
+    - name: 3. Vérifier si Tailscale est déjà connecté
+      command: tailscale ip -4
+      register: tailscale_status
+      changed_when: false
+      failed_when: false # Ne pas échouer si la commande elle-même échoue
+
+    - name: 3b. Installer et configurer Tailscale
+      block:
+        - name: Télécharger et exécuter le script d'installation Tailscale
+          shell: "curl -fsSL https://tailscale.com/install.sh | sh"
+          args:
+            creates: /usr/bin/tailscale # Ne s'exécute que si tailscale n'est pas déjà installé
+
+        - name: Connecter la machine au réseau Tailscale
+          command: >
+            tailscale up
+            --authkey={{ tailscale_auth_key }}
+            --hostname={{ new_hostname }}
+            --accept-routes
+            --advertise-exit-node
+            --ssh
+          # L'option --ssh est géniale, elle vous permet de faire `ssh vorpax_admin@vps-zeta` depuis n'importe quelle machine de votre tailnet
+          # L'option --hostname s'assure que le nom dans l'UI de Tailscale est bien celui que nous avons défini
+          
+      when: tailscale_status.rc != 0 # Ne s'exécute que si la machine n'est pas déjà connectée
+
+    - name: 4. S'assurer que les services sont démarrés et activés
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - docker
+        - tailscaled
+
+  handlers:
+    # Un redémarrage est la manière la plus fiable pour que toutes les applications (comme le prompt) voient le nouveau hostname.
+    - name: Redémarrer le serveur pour appliquer le hostname
+      reboot:
+        msg: "Redémarrage initié par Ansible pour appliquer le nouveau hostname"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: whoami

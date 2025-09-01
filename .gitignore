@@ -16,3 +16,6 @@ ssh/ansible_ssh_key.pub
 # Crush-specific files
 .crush
 CRUSH.md
+legacy/vars/secrets.yml
+legacy/vars/homelab_secrets.yml
+legacy/files/vorpax_key.pub

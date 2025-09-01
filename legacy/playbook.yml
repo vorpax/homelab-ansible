@@ -1,0 +1,75 @@
+---
+- name: Sécurisation et configuration initiale du VPS
+  hosts: vps
+  become: true  # Exécuter les tâches en tant que root (sudo)
+  vars_files:
+    - vars/secrets.yml # Charger nos variables secrètes
+
+  tasks:
+    - name: 1. Mise à jour des paquets (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+        upgrade: dist
+      when: ansible_os_family == "Debian"
+
+    - name: 1. Mise à jour des paquets (RedHat/CentOS/Fedora)
+      dnf:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: 2. Changer le mot de passe du compte root
+      user:
+        name: root
+        password: "{{ new_root_password }}"
+
+    - name: 3. Créer le nouvel utilisateur administrateur 'vorpax_admin'
+      user:
+        name: vorpax_admin
+        # Groupe 'sudo' sur Debian/Ubuntu, 'wheel' sur CentOS/RedHat
+        groups: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
+        append: yes
+        shell: /bin/bash
+        create_home: yes
+        password: "{{ vorpax_admin_password }}"
+
+    - name: 4. Ajouter la clé SSH à 'vorpax_admin' et 'root'
+      authorized_key:
+        user: "{{ item }}"
+        state: present
+        key: "{{ lookup('file', 'files/vorpax_key.pub') }}"
+      loop:
+        - vorpax_admin
+        - root
+
+    - name: 5. Configuration du pare-feu pour le nouveau port SSH (UFW)
+      ufw:
+        rule: allow
+        port: '4096'
+        proto: tcp
+      when: ansible_os_family == 'Debian'
+
+    - name: 5. Configuration du pare-feu pour le nouveau port SSH (firewalld)
+      firewalld:
+        port: 4096/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+      when: ansible_os_family == 'RedHat'
+
+    - name: 6. Sécurisation de la configuration SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        validate: 'sshd -t -f %s' # Valide la syntaxe avant de sauvegarder
+      loop:
+        - { regexp: '^#?Port', line: 'Port 4096' }
+        - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password' }
+      notify: Redémarrer SSH # Ne redémarre SSH que si ce fichier a été modifié
+
+  handlers:
+    - name: Redémarrer SSH
+      service:
+        name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
+        state: restarted
