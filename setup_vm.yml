@@ -1,0 +1,16 @@
+---
+- name: Configuration complète de l'environnement de la VM
+  hosts: my_servers
+  become: yes # La plupart des tâches nécessitent sudo
+  vars_files:
+    - host_vars/yoshi.yml
+  vars:
+    # Mappe notre variable chiffrée de host_vars/ à la variable attendue par le rôle Tailscale
+    tailscale_authkey: "{{ tailscale_auth_key }}"
+    # Utilise 'tailscale_args' pour passer des arguments à la commande 'tailscale up'
+    # Incluez ici toutes les options supplémentaires comme --accept-dns=false ou --ssh
+    tailscale_args: "--accept-dns=true" 
+
+  roles:
+    - user_env_setup
+    - artis3n.tailscale

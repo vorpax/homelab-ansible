@@ -1,0 +1,27 @@
+---
+# Configuration de l'utilisateur
+user_env_name: "vorpax_admin"
+user_env_groups:
+  - "sudo"
+  #- "docker" # Si vous l'utilisez
+
+# Configuration des paquets de base
+# On nettoie votre liste pour éviter les doublons
+user_env_base_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - git
+  - lsb-release
+  - unzip
+  - neovim
+  - tmux
+  - ripgrep
+  - fzf
+  - nnn
+  - fastfetch
+  - bat
+  - tldr
+
+# Configuration de l'environnement Python
+setup_python_env: true

@@ -1,0 +1,11 @@
+---
+- name: Mettre à jour le cache des paquets (Debian/Ubuntu)
+  ansible.builtin.apt:
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  changed_when: false # Ne pas marquer comme changé pour les mises à jour de cache
+
+- name: Installer les paquets de base
+  ansible.builtin.package:
+    name: "{{ user_env_base_packages }}"
+    state: present
