@@ -21,6 +21,7 @@ user_env_base_packages:
   - nnn
   - fastfetch
   - bat
+  - zsh
   - tldr
 
 # Configuration de l'environnement Python

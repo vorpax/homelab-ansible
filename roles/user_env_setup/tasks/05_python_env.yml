@@ -16,3 +16,37 @@
   environment:
     # S'assure que l'installation se fait dans le home de l'utilisateur
     CARGO_HOME: "/home/{{ user_env_name }}/.cargo"
+
+- name: Download astrall install
+  ansible.builtin.get_url:
+    url: https://astral.sh/uv/install.sh
+    dest: /home/{{ user_env_name }}/install.sh
+    mode: '0755'
+
+
+
+- name: Exécuter le script d'installation de zoxide
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.command: /home/{{ user_env_name }}/install.sh
+  args:
+    creates: "{{ user_home }}/.local/bin/"
+
+- name: Add python alias for foo user
+  lineinfile:
+    path=/home/{{user_env_name}}/.zshrc
+    line="alias python='python3'"
+    owner={{user_env_name}}
+    state=present
+    insertafter=EOF
+    create=True
+
+- name: 
+  lineinfile:
+      path=/home/{{user_env_name}}/.zshrc
+      line="alias python='python3'"
+      owner={{user_env_name}}
+      state=present
+      insertafter=EOF
+      create=True
+  

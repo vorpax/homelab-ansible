@@ -25,10 +25,6 @@
   args:
     creates: /var/lib/tailscale/tailscaled.state # Ne s'exécute que si non déjà configuré
   no_log: true # NE PAS AFFICHER LA CLÉ DANS LES LOGS !
-- name: . S'assurer que les services sont démarrés et activés
-      service:
-        name: 
-          - "tailscaled"
-        state: started
-        enabled: true
+
+
       

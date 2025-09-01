@@ -12,3 +12,7 @@ vps-setups/
 ssh/ansible_ssh_key
 host_vars/yoshi.yml
 ssh/ansible_ssh_key.pub
+
+# Crush-specific files
+.crush
+CRUSH.md

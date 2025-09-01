@@ -32,6 +32,11 @@
     owner: "{{ user_env_name }}"
     group: "{{ user_env_name }}"
     mode: '0644'
-  when: not ohmyzsh_dir.stat.exists # Seulement à la première installation
+  when: not ohmyzsh_dansir.stat.exists # Seulement à la première installation
   become: true
   become_user: "{{ user_env_name }}"
+
+- name: Changer le shell par défaut en Zsh pour l'utilisateur {{ user }}
+  ansible.builtin.user:
+    name: "{{ user_env_name }}"
+    shell: /bin/zsh
