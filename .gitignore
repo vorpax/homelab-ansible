@@ -20,3 +20,5 @@ legacy/vars/secrets.yml
 legacy/vars/homelab_secrets.yml
 legacy/files/vorpax_key.pub
 
+password.txt
+ansible-navigator.log

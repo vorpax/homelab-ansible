@@ -1,0 +1,4 @@
+warn_list: # or 'skip_list' to silence them completely
+  - yaml # Violations reported by yamllintansible-lint -v -T
+mock_roles:
+  - user_env_setup
