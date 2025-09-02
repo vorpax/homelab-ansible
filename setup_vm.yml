@@ -1,5 +1,5 @@
 ---
-- name: Configuration complète de l'environnement de la VM
+- name: "Configuration complète de l'environnement de la VM"
   hosts: my_servers
   become: yes # La plupart des tâches nécessitent sudo
   vars_files:

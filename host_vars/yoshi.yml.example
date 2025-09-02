@@ -1,0 +1,4 @@
+# Fichier d'exemple pour les variables de l'hôte yoshi
+# Copiez ce fichier en 'yoshi.yml' et remplissez les vraies valeurs.
+user_env_setup_name: "vorpax_example"
+tailscale_auth_key: "tskey-example-key"

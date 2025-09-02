@@ -19,3 +19,4 @@ CRUSH.md
 legacy/vars/secrets.yml
 legacy/vars/homelab_secrets.yml
 legacy/files/vorpax_key.pub
+
