@@ -8,10 +8,6 @@
 - name: 03 - Configuration du shell (Zsh + Oh My Zsh)
   ansible.builtin.import_tasks: 03_shell_setup.yml
 
-#- name: 04 - Installation et configuration de Tailscale
-#  ansible.builtin.import_tasks: 04_tailscale.yml
-#  when: tailscale_auth_key is defined and tailscale_auth_key != ""
-
 - name: 05 - Configuration de l'environnement Python
   ansible.builtin.import_tasks: 05_python_env.yml
-  when: setup_python_env | bool
+  when: user_env_setup_setup_python_env | bool
