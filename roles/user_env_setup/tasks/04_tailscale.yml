@@ -4,7 +4,7 @@
   ansible.builtin.get_url:
     url: https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_distribution_release }}.noarmor.gpg
     dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
-    mode: '0644'
+    mode: "0644"
   when: ansible_os_family == "Debian"
 
 - name: Ajouter le dépôt Tailscale
@@ -18,13 +18,10 @@
   ansible.builtin.package:
     name: tailscale
     state: present
-    update_cache: yes # Mettre à jour le cache après avoir ajouté le dépôt
+    update_cache: true # Mettre à jour le cache après avoir ajouté le dépôt
 
 - name: Connecter la machine au tailnet
   ansible.builtin.command: "tailscale up --authkey {{ tailscale_auth_key }} --accept-dns=false"
   args:
     creates: /var/lib/tailscale/tailscaled.state # Ne s'exécute que si non déjà configuré
   no_log: true # NE PAS AFFICHER LA CLÉ DANS LES LOGS !
-
-
-      

@@ -1,24 +1,22 @@
 ---
-
-
-- name: "Créer le groupe sudo (si non existant)"
+- name: "Créer le groupe sudo (si falsen existant)"
   ansible.builtin.group:
     name: sudo
     state: present
 
-- name: Créer l'utilisateur '{{ user_env_name }}'
+- name: Créer l'utilisateur '{{ user_env_setup_name }}'
   ansible.builtin.user:
-    name: "{{ user_env_name }}"
-    password: "{{ user_env_password }}"
-    groups: "{{ user_env_groups }}"
-    append: yes
+    name: "{{ user_env_setup_name }}"
+    password: "{{ user_env_setup_password }}"
+    groups: "{{ user_env_setup_groups }}"
+    append: true
     shell: /bin/bash # Sera changé plus tard
     state: present
-    create_home: yes
+    create_home: true
 
 - name: Mettre en place la clé SSH publique pour l'utilisateur
   ansible.posix.authorized_key:
-    user: "{{ user_env_name }}"
-    key: "{{ user_env_ssh_public_key }}"
+    user: "{{ user_env_setup_name }}"
+    key: "{{ user_env_setup_ssh_public_key }}"
     state: present
-    exclusive: no # 'yes' supprimerait toutes les autres clés
+    exclusive: false # 'true' supprimerait toutes les autres clés

@@ -6,37 +6,38 @@
 
 - name: Changer le shell par défaut de l'utilisateur pour Zsh
   ansible.builtin.user:
-    name: "{{ user_env_name }}"
+    name: "{{ user_env_setup_name }}"
     shell: /usr/bin/zsh
 
 - name: Vérifier si Oh My Zsh est déjà installé
   ansible.builtin.stat:
-    path: "/home/{{ user_env_name }}/.oh-my-zsh"
-  register: ohmyzsh_dir
+    path: "/home/{{ user_env_setup_name }}/.oh-my-zsh"
+  register: user_env_setup_ohmyzsh_dir
   become: true
-  become_user: "{{ user_env_name }}"
+  become_user: "{{ user_env_setup_name }}"
 
 - name: Cloner le dépôt Oh My Zsh
   ansible.builtin.git:
-    repo: 'https://github.com/ohmyzsh/ohmyzsh.git'
-    dest: "/home/{{ user_env_name }}/.oh-my-zsh"
-  when: not ohmyzsh_dir.stat.exists
+    repo: "https://github.com/ohmyzsh/ohmyzsh.git"
+    dest: "/home/{{ user_env_setup_name }}/.oh-my-zsh"
+    version: master
+  when: not user_env_setup_ohmyzsh_dir.stat.exists
   become: true
-  become_user: "{{ user_env_name }}"
+  become_user: "{{ user_env_setup_name }}"
 
 - name: Créer un fichier .zshrc à partir du template Oh My Zsh
   ansible.builtin.copy:
-    src: "/home/{{ user_env_name }}/.oh-my-zsh/templates/zshrc.zsh-template"
-    dest: "/home/{{ user_env_name }}/.zshrc"
-    remote_src: yes # La source est sur la machine distante
-    owner: "{{ user_env_name }}"
-    group: "{{ user_env_name }}"
-    mode: '0644'
-  when: not ohmyzsh_dansir.stat.exists # Seulement à la première installation
+    src: "/home/{{ user_env_setup_name }}/.oh-my-zsh/templates/zshrc.zsh-template"
+    dest: "/home/{{ user_env_setup_name }}/.zshrc"
+    remote_src: true
+    owner: "{{ user_env_setup_name }}"
+    group: "{{ user_env_setup_name }}"
+    mode: "0644"
+  when: not user_env_setup_ohmyzsh_dir.stat.exists # Seulement à la première installation
   become: true
-  become_user: "{{ user_env_name }}"
+  become_user: "{{ user_env_setup_name }}"
 
 - name: Changer le shell par défaut en Zsh pour l'utilisateur {{ user }}
   ansible.builtin.user:
-    name: "{{ user_env_name }}"
+    name: "{{ user_env_setup_name }}"
     shell: /bin/zsh
